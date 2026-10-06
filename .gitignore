@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Local application data
+notebooklm_links.txt
+*.log
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+
+# Browser/session data
+cookies*
+storage/
+sessions/
+profile/
+brave_profile/
+chromium_profile/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
