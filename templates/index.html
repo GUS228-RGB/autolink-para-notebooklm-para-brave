@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Playlist → NotebookLM</title>
+<style>
+body{margin:0;background:#0b1020;color:#eef2ff;font-family:Arial,sans-serif}
+main{width:min(950px,94%);margin:40px auto}.card{background:#121a2e;border:1px solid #26324d;border-radius:16px;padding:22px;margin-top:20px}
+input{width:100%;box-sizing:border-box;padding:14px;border-radius:10px;border:1px solid #26324d;background:#0f172a;color:white}
+button{border:0;border-radius:10px;padding:12px 16px;margin:12px 8px 0 0;cursor:pointer;background:#315ea8;color:white;font-weight:bold}
+.secondary{background:#334155}.success{background:#277a49}
+#links{max-height:400px;overflow:auto;padding-left:20px}.status{margin-top:15px;color:#9aa7c2;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+<h1>Playlist → NotebookLM</h1>
+<p>Extrai links dos vídeos de uma playlist. Não baixa os vídeos.</p>
+<section class="card">
+<label>URL da playlist do YouTube</label><br><br>
+<input id="playlist" placeholder="https://www.youtube.com/playlist?list=...">
+<button onclick="extractLinks()">Extrair links</button>
+<button class="secondary" onclick="copyLinks()">Copiar</button>
+<button class="secondary" onclick="saveTxt()">Salvar TXT</button>
+<div id="status" class="status">Nenhum link extraído.</div>
+<ul id="links"></ul>
+</section>
+<section class="card">
+<h2>NotebookLM + Brave</h2>
+<p>Salva os links e inicia a automação usando o Brave.</p>
+<button class="success" onclick="automate()">Adicionar automaticamente pelo Brave</button>
+<div id="auto" class="status"></div>
+</section>
+</main>
+<script>
+let links=[];
+function render(){document.getElementById("links").innerHTML=links.map(x=>`<li>${x}</li>`).join("")}
+async function extractLinks(){
+ const url=document.getElementById("playlist").value.trim();
+ document.getElementById("status").textContent="Extraindo...";
+ const r=await fetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({playlist_url:url})});
+ const d=await r.json();
+ if(!d.ok){document.getElementById("status").textContent="Erro: "+d.error;return}
+ links=d.links;render();document.getElementById("status").textContent=`Encontrados ${links.length} links.`;
+}
+async function copyLinks(){
+ if(!links.length)return;
+ await navigator.clipboard.writeText(links.join("\n"));
+ document.getElementById("status").textContent="Links copiados.";
+}
+function saveTxt(){
+ if(!links.length)return;
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([links.join("\n")+"\n"],{type:"text/plain"}));a.download="youtube_playlist_links.txt";a.click();
+}
+async function automate(){
+ const el=document.getElementById("auto");el.textContent="Iniciando...";
+ const r=await fetch("/api/automate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({links})});
+ const d=await r.json();el.textContent=d.ok?d.message+" Links: "+d.count:"Erro: "+d.error;
+}
+</script>
+</body>
+</html>
